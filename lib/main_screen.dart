@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
@@ -12,16 +10,24 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   List<dynamic> bucketListData = [];
+  bool isLoading = false;
 
   Future<void> getData() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       Response response = await Dio().get(
           "https://flutterapitesting123-default-rtdb.firebaseio.com/bucketlist.json");
 
       bucketListData = response.data;
+      isLoading = false;
       setState(() {});
     } catch (exception) {
+      isLoading = false;
+      setState(() {});
       showDialog(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (context) {
             return AlertDialog(
@@ -33,17 +39,33 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Bucket List")),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed: getData,
-            child: Text("Get Data"),
+      appBar: AppBar(
+        title: Text("Bucket List"),
+        actions: [
+          InkWell(
+            onTap: getData,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(Icons.refresh),
+            ),
           ),
-          Expanded(
-            child: ListView.builder(
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          getData();
+        },
+        child: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : ListView.builder(
                 itemCount: bucketListData.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Padding(
@@ -55,13 +77,10 @@ class _MainScreenState extends State<MainScreen> {
                             NetworkImage(bucketListData[index]['image'] ?? ""),
                       ),
                       title: Text(bucketListData[index]['item'] ?? ""),
-                      trailing:
-                          Text(bucketListData[index]['cost'].toString() ?? ""),
+                      trailing: Text(bucketListData[index]['cost'].toString()),
                     ),
                   );
                 }),
-          )
-        ],
       ),
     );
   }
