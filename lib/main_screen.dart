@@ -13,6 +13,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   List<dynamic> bucketListData = [];
   bool isLoading = false;
+  bool isError = false;
 
   Future<void> getData() async {
     setState(() {
@@ -24,19 +25,12 @@ class _MainScreenState extends State<MainScreen> {
 
       bucketListData = response.data;
       isLoading = false;
+      isError = false;
       setState(() {});
     } catch (exception) {
       isLoading = false;
+      isError = true;
       setState(() {});
-      showDialog(
-          // ignore: use_build_context_synchronously
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title:
-                  Text("Cannot connect to the server. Try after few second!"),
-            );
-          });
     }
   }
 
@@ -44,6 +38,52 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     getData();
+  }
+
+  Widget errorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.warning),
+          Text("Error getting bucket list data."),
+          ElevatedButton(onPressed: getData, child: Text("Try Again"))
+        ],
+      ),
+    );
+  }
+
+  Widget listDataWidget() {
+    return ListView.builder(
+      itemCount: bucketListData.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ViewItem(
+                      title: bucketListData[index]['item'] ?? "",
+                      image: bucketListData[index]['image'] ?? "",
+                    );
+                  },
+                ),
+              );
+            },
+            leading: CircleAvatar(
+              radius: 25,
+              backgroundImage:
+                  NetworkImage(bucketListData[index]['image'] ?? ""),
+            ),
+            title: Text(bucketListData[index]['item'] ?? ""),
+            trailing: Text(bucketListData[index]['cost'].toString()),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -76,35 +116,9 @@ class _MainScreenState extends State<MainScreen> {
         },
         child: isLoading
             ? Center(child: CircularProgressIndicator())
-            : ListView.builder(
-                itemCount: bucketListData.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return ViewItem(
-                                title: bucketListData[index]['item'] ?? "",
-                                image: bucketListData[index]['image'] ?? "",
-                              );
-                            },
-                          ),
-                        );
-                      },
-                      leading: CircleAvatar(
-                        radius: 25,
-                        backgroundImage:
-                            NetworkImage(bucketListData[index]['image'] ?? ""),
-                      ),
-                      title: Text(bucketListData[index]['item'] ?? ""),
-                      trailing: Text(bucketListData[index]['cost'].toString()),
-                    ),
-                  );
-                }),
+            : isError
+                ? errorWidget()
+                : listDataWidget(),
       ),
     );
   }
