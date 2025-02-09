@@ -23,7 +23,18 @@ class _ViewItemState extends State<ViewItem> {
     try {
       Response response = await Dio().delete(
           "https://flutterapitesting123-default-rtdb.firebaseio.com/bucketlist/${widget.index}.json");
-      Navigator.pop(context);
+      Navigator.pop(context, "refresh");
+      // ignore: empty_catches
+    } catch (e) {}
+  }
+
+  Future<void> markAsCoomplete() async {
+    try {
+      Map<String, dynamic> data = {"complete": true};
+      Response response = await Dio().patch(
+          "https://flutterapitesting123-default-rtdb.firebaseio.com/bucketlist/${widget.index}.json",
+          data: data);
+      Navigator.pop(context, "refresh");
       // ignore: empty_catches
     } catch (e) {}
   }
@@ -54,6 +65,9 @@ class _ViewItemState extends State<ViewItem> {
                     );
                   },
                 );
+              }
+              if (value == 2) {
+                markAsCoomplete();
               }
             },
             itemBuilder: (context) {
