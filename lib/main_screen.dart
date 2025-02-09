@@ -23,7 +23,9 @@ class _MainScreenState extends State<MainScreen> {
       Response response = await Dio().get(
           "https://flutterapitesting123-default-rtdb.firebaseio.com/bucketlist.json");
 
-      bucketListData = response.data;
+      response.data is List
+          ? bucketListData = response.data
+          : bucketListData = [];
       isLoading = false;
       isError = false;
       setState(() {});
@@ -118,7 +120,9 @@ class _MainScreenState extends State<MainScreen> {
             ? Center(child: CircularProgressIndicator())
             : isError
                 ? errorWidget()
-                : listDataWidget(),
+                : bucketListData.isEmpty
+                    ? Center(child: Text("You don't have bucket list."))
+                    : listDataWidget(),
       ),
     );
   }
