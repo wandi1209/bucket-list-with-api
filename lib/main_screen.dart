@@ -56,44 +56,49 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget listDataWidget() {
-    return ListView.builder(
-      itemCount: bucketListData.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: (bucketListData[index] is Map)
-              ? ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return ViewItem(
-                            title: bucketListData[index]['item'] ?? "",
-                            image: bucketListData[index]['image'] ?? "",
-                            index: index,
-                          );
+    List<dynamic> filterList =
+        bucketListData.where((element) => !element?['complete']).toList();
+    return (filterList.isEmpty)
+        ? Center(child: Text("You don't have any bucket list."))
+        : ListView.builder(
+            itemCount: bucketListData.length,
+            itemBuilder: (BuildContext context, int index) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: (bucketListData[index] is Map &&
+                        !bucketListData[index]?['complete'])
+                    ? ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return ViewItem(
+                                  title: bucketListData[index]['item'] ?? "",
+                                  image: bucketListData[index]['image'] ?? "",
+                                  index: index,
+                                );
+                              },
+                            ),
+                          ).then((value) {
+                            if (value == "refresh") {
+                              getData();
+                            }
+                          });
                         },
-                      ),
-                    ).then((value) {
-                      if (value == "refresh") {
-                        getData();
-                      }
-                    });
-                  },
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundImage:
-                        NetworkImage(bucketListData[index]?['image'] ?? ""),
-                  ),
-                  title: Text(bucketListData[index]?['item'] ?? ""),
-                  trailing:
-                      Text(bucketListData[index]?['cost'].toString() ?? ""),
-                )
-              : SizedBox(),
-        );
-      },
-    );
+                        leading: CircleAvatar(
+                          radius: 25,
+                          backgroundImage: NetworkImage(
+                              bucketListData[index]?['image'] ?? ""),
+                        ),
+                        title: Text(bucketListData[index]?['item'] ?? ""),
+                        trailing: Text(
+                            bucketListData[index]?['cost'].toString() ?? ""),
+                      )
+                    : SizedBox(),
+              );
+            },
+          );
   }
 
   @override
@@ -128,9 +133,7 @@ class _MainScreenState extends State<MainScreen> {
             ? Center(child: CircularProgressIndicator())
             : isError
                 ? errorWidget()
-                : bucketListData.isEmpty
-                    ? Center(child: Text("You don't have bucket list."))
-                    : listDataWidget(),
+                : listDataWidget(),
       ),
     );
   }
