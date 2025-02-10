@@ -56,8 +56,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget listDataWidget() {
-    List<dynamic> filterList =
-        bucketListData.where((element) => !element?['complete']).toList();
+    List<dynamic> filterList = bucketListData
+        .where((element) => !(element?['complete'] ?? false))
+        .toList();
     return (filterList.isEmpty)
         ? Center(child: Text("You don't have any bucket list."))
         : ListView.builder(
